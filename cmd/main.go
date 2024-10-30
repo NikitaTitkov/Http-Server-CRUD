@@ -16,7 +16,7 @@ import (
 const (
 	baceurl             = "localhost:8080"
 	CreateUserPostfix   = "/users"
-	GetUsersDyIdPostfix = "/users/%d"
+	GetUsersDyIDPostfix = "/users/%d"
 )
 
 // UserInfo holds information about the user.
@@ -52,14 +52,14 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	Users.mutex.RLock()
 	defer Users.mutex.RUnlock()
 
 }
 
-func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
-	//TODO: implement
+// GetUserByIDHandler is a handler function for retrieving a user by their ID.
+func GetUserByIDHandler(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
 
 // Users is a global variable that holds a map of users.
@@ -71,7 +71,7 @@ func main() {
 
 	// Add a handler for creating a new user.
 	r.Post(CreateUserPostfix, CreateUserHandler)
-	r.Get(GetUsersDyIdPostfix, GetUsersHandler)
+	r.Get(GetUsersDyIDPostfix, GetUserByIDHandler)
 
 	server := &http.Server{
 		Addr:         baceurl,
