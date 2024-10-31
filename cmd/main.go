@@ -15,8 +15,9 @@ import (
 // Defines the endpoint.
 const (
 	baceurl             = "localhost:8080"
-	CreateUserPostfix   = "/users"
+	CreateUserPostfix   = "/newuser"
 	GetUsersDyIDPostfix = "/users/%d"
+	GetAllusersPostfix  = "/users"
 )
 
 // UserInfo holds information about the user.
@@ -39,7 +40,7 @@ type syncMap struct {
 	mutex    sync.RWMutex
 }
 
-// CreateUserHandler is a handler function for creating a new user.
+// CreateUserHandler is a handler function for creating a new user.// CreateUserHandler is a handler function for creating a new user.
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := &User{}
 	err := json.NewDecoder(r.Body).Decode(user)
@@ -47,6 +48,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}
+
 	err = json.NewEncoder(w).Encode(user)
 	if err != nil {
 		return
@@ -55,6 +57,11 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	Users.mutex.RLock()
 	defer Users.mutex.RUnlock()
 
+	Users.elements[user.ID] = user
+
+	for id, u := range Users.elements {
+		log.Printf("User ID: %d, Name: %s, Age: %d, Email: %s, Info: %+v\n", id, u.Name, u.Age, u.Email, u.Info)
+	}
 }
 
 // GetUserByIDHandler is a handler function for retrieving a user by their ID.
@@ -66,7 +73,7 @@ func GetUserByIDHandler(w http.ResponseWriter, _ *http.Request) {
 var Users = &syncMap{elements: make(map[int64]*User)}
 
 func main() {
-	fmt.Println(color.GreenString("Hello, world!"))
+
 	r := chi.NewRouter()
 
 	// Add a handler for creating a new user.
@@ -80,9 +87,9 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 		//IdleTimeout:  30 * time.Second, // if needed
 	}
+	fmt.Println(color.GreenString("Server staerted!"))
 
 	err := server.ListenAndServe()
-
 	if err != nil {
 		log.Fatal(err)
 	}
