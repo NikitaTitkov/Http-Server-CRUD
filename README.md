@@ -29,3 +29,7 @@ curl -i -X GET http://localhost:8080/users/1
 ```bash
 curl -i -X GET http://localhost:8080/users
 ```
+
+```bash
+curl -i -X DELETE http://localhost:8080/users/1
+```

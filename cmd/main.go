@@ -19,6 +19,7 @@ const (
 	CreateUserPostfix   = "/newuser"
 	GetUsersDyIDPostfix = "/users/{id}"
 	GetAllusersPostfix  = "/users"
+	DeleteUserPostfix   = "/users/{id}"
 )
 
 // UserInfo holds information about the user.
@@ -104,6 +105,25 @@ func GetAllusersHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
+// DeleteUserHandler is a handler function for deleting a user by their ID.
+func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+	Users.mutex.Lock()
+	defer Users.mutex.Unlock()
+	_, ok := Users.elements[id]
+	if !ok {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	delete(Users.elements, id)
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // Users is a global variable that holds a map of users.
 var Users = &syncMap{elements: make(map[int64]*User)}
 
@@ -111,10 +131,11 @@ func main() {
 
 	r := chi.NewRouter()
 
-	// Add a handler for creating a new user.
 	r.Post(CreateUserPostfix, CreateUserHandler)
 	r.Get(GetUsersDyIDPostfix, GetUserByIDHandler)
 	r.Get(GetAllusersPostfix, GetAllusersHandler)
+	r.Delete(DeleteUserPostfix, DeleteUserHandler)
+	//r.Patch(UpdateUserPostfix, UpdateUserHandler)
 
 	server := &http.Server{
 		Addr:         baseurl,
