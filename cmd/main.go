@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -14,9 +15,9 @@ import (
 
 // Defines the endpoint.
 const (
-	baceurl             = "localhost:8080"
+	baseurl             = "localhost:8080"
 	CreateUserPostfix   = "/newuser"
-	GetUsersDyIDPostfix = "/users/%d"
+	GetUsersDyIDPostfix = "/users/{id}"
 	GetAllusersPostfix  = "/users"
 )
 
@@ -49,13 +50,17 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
 	err = json.NewEncoder(w).Encode(user)
 	if err != nil {
+		http.Error(w, "Failed to encode user data in create request", http.StatusInternalServerError)
 		return
 	}
 
-	Users.mutex.RLock()
-	defer Users.mutex.RUnlock()
+	Users.mutex.Lock()
+	defer Users.mutex.Unlock()
 
 	Users.elements[user.ID] = user
 
@@ -65,8 +70,38 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetUserByIDHandler is a handler function for retrieving a user by their ID.
-func GetUserByIDHandler(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
+func GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+	Users.mutex.RLock()
+	defer Users.mutex.RUnlock()
+	user, ok := Users.elements[id]
+	if !ok {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		http.Error(w, "Failed to encode user data in get byID request", http.StatusInternalServerError)
+		return
+	}
+}
+
+// GetAllusersHandler is a handler function for retrieving all users.
+func GetAllusersHandler(w http.ResponseWriter, _ *http.Request) {
+	Users.mutex.RLock()
+	defer Users.mutex.RUnlock()
+	w.Header().Set("Content-Type", "application/json")
+	err := json.NewEncoder(w).Encode(Users.elements)
+	if err != nil {
+		http.Error(w, "Failed to encode user data in get users request", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Users is a global variable that holds a map of users.
@@ -79,13 +114,13 @@ func main() {
 	// Add a handler for creating a new user.
 	r.Post(CreateUserPostfix, CreateUserHandler)
 	r.Get(GetUsersDyIDPostfix, GetUserByIDHandler)
+	r.Get(GetAllusersPostfix, GetAllusersHandler)
 
 	server := &http.Server{
-		Addr:         baceurl,
+		Addr:         baseurl,
 		Handler:      r,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
-		//IdleTimeout:  30 * time.Second, // if needed
 	}
 	fmt.Println(color.GreenString("Server staerted!"))
 
