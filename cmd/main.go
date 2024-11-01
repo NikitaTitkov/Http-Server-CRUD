@@ -20,6 +20,7 @@ const (
 	GetUsersDyIDPostfix = "/users/{id}"
 	GetAllusersPostfix  = "/users"
 	DeleteUserPostfix   = "/users/{id}"
+	UpdateUserPostfix   = "/users/{id}"
 )
 
 // UserInfo holds information about the user.
@@ -124,6 +125,52 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// UpdateUserHandler is a handler function for updating a user's details.
+func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+	Users.mutex.Lock()
+	defer Users.mutex.Unlock()
+	user, ok := Users.elements[id]
+	if !ok {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	updatedUser := &User{}
+	err = json.NewDecoder(r.Body).Decode(updatedUser)
+	if err != nil {
+		http.Error(w, "Invalid request format", http.StatusBadRequest)
+		return
+	}
+
+	UpdateUser(user, updatedUser)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// UpdateUser updates only the non-zero fields of an existing user with the values from updatedUser.
+func UpdateUser(existingUser *User, updatedUser *User) {
+	if updatedUser.Name != "" {
+		existingUser.Name = updatedUser.Name
+	}
+	if updatedUser.Age != 0 {
+		existingUser.Age = updatedUser.Age
+	}
+	if updatedUser.Email != "" {
+		existingUser.Email = updatedUser.Email
+	}
+	if updatedUser.Info.Street != "" {
+		existingUser.Info.Street = updatedUser.Info.Street
+	}
+	if updatedUser.Info.City != "" {
+		existingUser.Info.City = updatedUser.Info.City
+	}
+}
+
 // Users is a global variable that holds a map of users.
 var Users = &syncMap{elements: make(map[int64]*User)}
 
@@ -135,7 +182,7 @@ func main() {
 	r.Get(GetUsersDyIDPostfix, GetUserByIDHandler)
 	r.Get(GetAllusersPostfix, GetAllusersHandler)
 	r.Delete(DeleteUserPostfix, DeleteUserHandler)
-	//r.Patch(UpdateUserPostfix, UpdateUserHandler)
+	r.Patch(UpdateUserPostfix, UpdateUserHandler)
 
 	server := &http.Server{
 		Addr:         baseurl,
