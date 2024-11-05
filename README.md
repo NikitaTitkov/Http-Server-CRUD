@@ -1,38 +1,55 @@
-# Проект HttpServer-CRUD на Go
+<h1 align="center">HttpServer-CRUD</h1>
 
-Этот проект представляет собой HTTP сервер на Go с CRUD функционалом для управления пользователями. Сервер позволяет добавлять, получать, обновлять и удалять пользователей с использованием REST API.
-## Запуск сервера локально:
+## Table of Contents
 
-```bash
-go run cmd/main.go
-```
-## Билд и запуск сервера:
+- [About](#about)
+- [Getting Started](#getting_started)
+- [API Examples](#api_examples)
+- [Testing](#testing)
 
-```bash
-go build cmd/main.go
-./main
-```
+## About <a name = "about"></a>
 
-## Установка линтера
+HTTP сервер на Go, реализующий CRUD (создание, чтение, обновление и удаление) для управления пользователями через REST API.
 
-### Для установки линтера используйте следующую команду:
+## Getting Started <a name = "getting_started"></a>
+
+Инструкции для локального запуска, сборки и установки линтера.
+
+### Установка линтера
+
+Для установки линтера используйте следующую команду:
 
 ```bash
 make install-golangci-lint
 ```
 
-### Для запуска линтера выполните:
+### Запуск линтера
 
 ```bash
 make lint
 ```
-## Примеры использования API
+
+### Запуск сервера локально
+
+```bash
+go run cmd/main.go
+```
+
+### Сборка и запуск сервера
+
+```bash
+go build -o bin/server cmd/main.go
+./bin/server
+```
+
+## API Examples <a name = "api_examples"></a>
 
 ### Добавление нового пользователя
 
 ```bash
 curl -i -X POST -H "Content-Type: application/json" -d '{"id":1,"name":"Alexy Laiho","age":41,"email":"alexycobhc@example.com","info":{"street":"123 Main St","city":"Anytown"}}' http://localhost:8080/newuser
 ```
+
 ### Получение информации о пользователе
 
 ```bash
@@ -44,6 +61,7 @@ curl -i -X GET http://localhost:8080/users/1
 ```bash
 curl -i -X GET http://localhost:8080/users
 ```
+
 ### Удаление пользователя
 
 ```bash
@@ -62,7 +80,11 @@ curl -i -X PATCH "http://localhost:8080/users/1" \
            }
          }'
 ```
+
+## Testing <a name = "testing"></a>
+
 ### Запуск тестов
+
 ```bash
 go test -v ./...
 ```
