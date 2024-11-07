@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -6,12 +6,16 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/TitkovNikita/Http-Server-CRUD/cmd/entities"
 	"github.com/go-chi/chi"
 )
 
+// Users contains a synchronized map of users.
+var Users = &entities.SyncMap{Elements: make(map[int64]*entities.User)}
+
 // CreateUserHandler is a handler function for creating a new user.// CreateUserHandler is a handler function for creating a new user.
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
-	user := &User{}
+	user := &entities.User{}
 	err := json.NewDecoder(r.Body).Decode(user)
 	if err != nil {
 		http.Error(w, "Invalid request format", http.StatusBadRequest)
@@ -27,12 +31,12 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Users.mutex.Lock()
-	defer Users.mutex.Unlock()
+	Users.Mutex.Lock()
+	defer Users.Mutex.Unlock()
 
-	Users.elements[user.ID] = user
+	Users.Elements[user.ID] = user
 
-	for id, u := range Users.elements {
+	for id, u := range Users.Elements {
 		log.Printf("User ID: %d, Name: %s, Age: %d, Email: %s, Info: %+v\n", id, u.Name, u.Age, u.Email, u.Info)
 	}
 }
@@ -45,9 +49,9 @@ func GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
 		return
 	}
-	Users.mutex.RLock()
-	defer Users.mutex.RUnlock()
-	user, ok := Users.elements[id]
+	Users.Mutex.RLock()
+	defer Users.Mutex.RUnlock()
+	user, ok := Users.Elements[id]
 	if !ok {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
@@ -62,10 +66,10 @@ func GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 // GetAllusersHandler is a handler function for retrieving all users.
 func GetAllusersHandler(w http.ResponseWriter, _ *http.Request) {
-	Users.mutex.RLock()
-	defer Users.mutex.RUnlock()
+	Users.Mutex.RLock()
+	defer Users.Mutex.RUnlock()
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(Users.elements)
+	err := json.NewEncoder(w).Encode(Users.Elements)
 	if err != nil {
 		http.Error(w, "Failed to encode user data in get users request", http.StatusInternalServerError)
 		return
@@ -80,14 +84,14 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
 		return
 	}
-	Users.mutex.Lock()
-	defer Users.mutex.Unlock()
-	_, ok := Users.elements[id]
+	Users.Mutex.Lock()
+	defer Users.Mutex.Unlock()
+	_, ok := Users.Elements[id]
 	if !ok {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
-	delete(Users.elements, id)
+	delete(Users.Elements, id)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -99,15 +103,15 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
 		return
 	}
-	Users.mutex.Lock()
-	defer Users.mutex.Unlock()
-	user, ok := Users.elements[id]
+	Users.Mutex.Lock()
+	defer Users.Mutex.Unlock()
+	user, ok := Users.Elements[id]
 	if !ok {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
-	updatedUser := &User{}
+	updatedUser := &entities.User{}
 	err = json.NewDecoder(r.Body).Decode(updatedUser)
 	if err != nil {
 		http.Error(w, "Invalid request format", http.StatusBadRequest)
@@ -119,7 +123,7 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateUser updates only the non-zero fields of an existing user with the values from updatedUser.
-func UpdateUser(existingUser *User, updatedUser *User) {
+func UpdateUser(existingUser *entities.User, updatedUser *entities.User) {
 	if updatedUser.Name != "" {
 		existingUser.Name = updatedUser.Name
 	}

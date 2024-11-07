@@ -4,66 +4,43 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 
+	"github.com/TitkovNikita/Http-Server-CRUD/cmd/handlers"
 	"github.com/fatih/color"
 	"github.com/go-chi/chi"
+	"github.com/spf13/viper"
 )
-
-// Defines the endpoint.
-const (
-	baseurl             = "localhost:8080"
-	CreateUserPostfix   = "/newuser"
-	GetUsersDyIDPostfix = "/users/{id}"
-	GetAllusersPostfix  = "/users"
-	DeleteUserPostfix   = "/users/{id}"
-	UpdateUserPostfix   = "/users/{id}"
-)
-
-// UserInfo holds information about the user.
-type UserInfo struct {
-	Street string `json:"street"`
-	City   string `json:"city"`
-}
-
-// User represents a user entity with associated information.
-type User struct {
-	ID    int64    `json:"id"`
-	Name  string   `json:"name"`
-	Age   int      `json:"age"`
-	Email string   `json:"email"`
-	Info  UserInfo `json:"info"`
-}
-
-type syncMap struct {
-	elements map[int64]*User
-	mutex    sync.RWMutex
-}
-
-// Users is a global variable that holds a map of users.
-var Users = &syncMap{elements: make(map[int64]*User)}
 
 func main() {
-
+	err := initConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 	r := chi.NewRouter()
 
-	r.Post(CreateUserPostfix, CreateUserHandler)
-	r.Get(GetUsersDyIDPostfix, GetUserByIDHandler)
-	r.Get(GetAllusersPostfix, GetAllusersHandler)
-	r.Delete(DeleteUserPostfix, DeleteUserHandler)
-	r.Patch(UpdateUserPostfix, UpdateUserHandler)
+	r.Post(viper.GetString("CreateUserPostfix"), handlers.CreateUserHandler)
+	r.Get(viper.GetString("GetUsersDyIDPostfix"), handlers.GetUserByIDHandler)
+	r.Get(viper.GetString("GetAllusersPostfix"), handlers.GetAllusersHandler)
+	r.Delete(viper.GetString("DeleteUserPostfix"), handlers.DeleteUserHandler)
+	r.Patch(viper.GetString("UpdateUserPostfix"), handlers.UpdateUserHandler)
 
 	server := &http.Server{
-		Addr:         baseurl,
+		Addr:         viper.GetString("baseurl"),
 		Handler:      r,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
-	fmt.Println(color.GreenString("Server staerted!"))
+	fmt.Println(color.GreenString("Server started!"))
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func initConfig() error {
+	viper.AddConfigPath("../configs")
+	viper.SetConfigName("config")
+	return viper.ReadInConfig()
 }

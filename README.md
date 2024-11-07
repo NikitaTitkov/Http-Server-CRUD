@@ -38,7 +38,7 @@ go run cmd/main.go
 ### Сборка и запуск сервера
 
 ```bash
-go build -o bin/server cmd/main.go
+go build -o bin/server ./cmd/main.go
 ./bin/server
 ```
 
