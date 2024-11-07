@@ -41,8 +41,6 @@ type syncMap struct {
 	mutex    sync.RWMutex
 }
 
-// CreateUserHandler is a handler function for creating a new user.// CreateUserHandler is a handler function for creating a new user.
-
 // Users is a global variable that holds a map of users.
 var Users = &syncMap{elements: make(map[int64]*User)}
 

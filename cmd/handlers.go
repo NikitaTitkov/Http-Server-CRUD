@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
+// CreateUserHandler is a handler function for creating a new user.// CreateUserHandler is a handler function for creating a new user.
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := &User{}
 	err := json.NewDecoder(r.Body).Decode(user)
