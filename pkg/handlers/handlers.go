@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/TitkovNikita/Http-Server-CRUD/cmd/entities"
+	"github.com/TitkovNikita/Http-Server-CRUD/pkg/entities"
 	"github.com/go-chi/chi"
 )
 

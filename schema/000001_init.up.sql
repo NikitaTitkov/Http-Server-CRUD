@@ -1,0 +1,13 @@
+CREATE TABLE users_info (
+    id SERIAL PRIMARY KEY,
+    street VARCHAR(255) NOT NULL,
+    city VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    age INT NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    info_id INT REFERENCES users_info(id) ON DELETE CASCADE
+);

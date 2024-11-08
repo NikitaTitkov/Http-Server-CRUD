@@ -28,6 +28,23 @@ make install-golangci-lint
 ```bash
 make lint
 ```
+### [Migrations](https://github.com/golang-migrate/migrate)
+Накат миграций (up)
+
+Замените !YOUR USER!, !YOUR PASSWORD!, и !YOUR PORT! на реальные значения для подключения к базе данных
+
+Параметр sslmode=disable отключает SSL-соединение (например, если ваше приложение не требует шифрования)
+
+```bash
+migrate -path ./schema -database 'postgres://!YOUR USER!:!YOUR PASSWORD!@localhost:!YOUR PORT!/postgres?sslmode=disable' up
+```
+Откат миграций (down)
+
+Это позволит вернуться к предыдущей версии схемы базы данных
+
+```bash
+migrate -path ./schema -database 'postgres://!YOUR USER!:!YOUR PASSWORD!@localhost:!YOUR PORT!/postgres?sslmode=disable' down
+```
 
 ### Запуск сервера локально
 
@@ -88,3 +105,4 @@ curl -i -X PATCH "http://localhost:8080/users/1" \
 ```bash
 go test -v ./...
 ```
+

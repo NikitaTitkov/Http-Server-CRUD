@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/TitkovNikita/Http-Server-CRUD/cmd/handlers"
+	"github.com/TitkovNikita/Http-Server-CRUD/pkg/handlers"
 	"github.com/fatih/color"
 	"github.com/go-chi/chi"
 	"github.com/spf13/viper"
