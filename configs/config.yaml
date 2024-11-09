@@ -4,3 +4,10 @@ GetUsersDyIDPostfix: "/users/{id}"
 GetAllusersPostfix: "/users"
 DeleteUserPostfix: "/users/{id}"
 UpdateUserPostfix:   "/users/{id}"
+
+host: "localhost"
+port: 5436
+user: "postgres"
+password: "qwerty"
+dbname: "postgres"
+sslmode: "disable"

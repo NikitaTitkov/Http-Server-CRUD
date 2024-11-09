@@ -1,3 +1,4 @@
 /bin/
 main
 /cmd/main_test.go
+.env

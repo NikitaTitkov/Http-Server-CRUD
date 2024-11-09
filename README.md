@@ -105,4 +105,3 @@ curl -i -X PATCH "http://localhost:8080/users/1" \
 ```bash
 go test -v ./...
 ```
-
