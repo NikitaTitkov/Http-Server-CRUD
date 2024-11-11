@@ -1,24 +1,68 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/TitkovNikita/Http-Server-CRUD/pkg/entities"
 	"github.com/go-chi/chi"
+	"github.com/jmoiron/sqlx"
 )
+
+const (
+	usersTable      = "users"
+	usersInfoTablle = "users_info"
+)
+
+// Handler - structure to store the database connection.
+type Handler struct {
+	DB *sqlx.DB
+}
 
 // Users contains a synchronized map of users.
 var Users = &entities.SyncMap{Elements: make(map[int64]*entities.User)}
 
 // CreateUserHandler is a handler function for creating a new user.// CreateUserHandler is a handler function for creating a new user.
-func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := &entities.User{}
 	err := json.NewDecoder(r.Body).Decode(user)
 	if err != nil {
 		http.Error(w, "Invalid request format", http.StatusBadRequest)
+		return
+	}
+
+	tx, err := h.DB.Beginx()
+	if err != nil {
+		http.Error(w, "Failed to begin transaction: ", http.StatusInternalServerError)
+	}
+
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Printf("Failed to rollback transaction: %v", err)
+		}
+	}()
+
+	queryUserInfo := fmt.Sprintf("INSERT INTO %s (street, city) values ($1, $2) RETURNING id", usersInfoTablle)
+	var infoID int
+	err = tx.QueryRowx(queryUserInfo, user.Info.Street, user.Info.City).Scan(&infoID)
+	if err != nil {
+		http.Error(w, "Failed to insert user info", http.StatusInternalServerError)
+		return
+	}
+
+	queryUser := fmt.Sprintf("INSERT INTO %s (name, age, email, info_id) VALUES ($1, $2, $3, $4) RETURNING id", usersTable)
+	err = tx.QueryRowx(queryUser, user.Name, user.Age, user.Email, infoID).Scan(&user.ID)
+	if err != nil {
+		http.Error(w, "Failed to insert user", http.StatusInternalServerError)
+		return
+	}
+	err = tx.Commit()
+	if err != nil {
+		http.Error(w, "failed to commit", http.StatusInternalServerError)
 		return
 	}
 
@@ -42,7 +86,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetUserByIDHandler is a handler function for retrieving a user by their ID.
-func GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {

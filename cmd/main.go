@@ -32,7 +32,7 @@ func main() {
 	if err := gotenv.Load(); err != nil {
 		logrus.Fatal("failed to load env variables: ", err)
 	}
-	_, err = databace.NewPostgresDB(
+	DB, err := databace.NewPostgresDB(
 		databace.Config{
 			Host:     viper.GetString("host"),
 			Port:     viper.GetString("port"),
@@ -43,14 +43,17 @@ func main() {
 			SslMode:  viper.GetString("sslmode"),
 		},
 	)
+
+	h := handlers.Handler{DB: DB}
+
 	if err != nil {
 		logrus.Fatal("failded to initialice db: ", err)
 	}
 
 	r := chi.NewRouter()
 
-	r.Post(viper.GetString("CreateUserPostfix"), handlers.CreateUserHandler)
-	r.Get(viper.GetString("GetUsersDyIDPostfix"), handlers.GetUserByIDHandler)
+	r.Post(viper.GetString("CreateUserPostfix"), h.CreateUserHandler)
+	r.Get(viper.GetString("GetUsersDyIDPostfix"), h.GetUserByIDHandler)
 	r.Get(viper.GetString("GetAllusersPostfix"), handlers.GetAllusersHandler)
 	r.Delete(viper.GetString("DeleteUserPostfix"), handlers.DeleteUserHandler)
 	r.Patch(viper.GetString("UpdateUserPostfix"), handlers.UpdateUserHandler)
