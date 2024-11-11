@@ -122,11 +122,43 @@ func (h *Handler) GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllusersHandler is a handler function for retrieving all users.
-func GetAllusersHandler(w http.ResponseWriter, _ *http.Request) {
-	Users.Mutex.RLock()
-	defer Users.Mutex.RUnlock()
+func (h *Handler) GetAllusersHandler(w http.ResponseWriter, _ *http.Request) {
+
+	var users []entities.User
+
+	query := fmt.Sprintf(`
+	SELECT u.id, u.name, u.age, u.email, i.street, i.city 
+	FROM %s u
+	JOIN %s i ON u.info_id = i.id`, usersTable, usersInfoTablle)
+
+	rows, err := h.DB.Queryx(query)
+	if err != nil {
+		http.Error(w, "Failed to retrieve users", http.StatusInternalServerError)
+		return
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Println("Error closing rows:", err)
+		}
+	}()
+
+	for rows.Next() {
+		user := entities.User{}
+		err = rows.Scan(&user.ID, &user.Name, &user.Age, &user.Email, &user.Info.Street, &user.Info.City)
+		if err != nil {
+			http.Error(w, "Failed to scan user data", http.StatusInternalServerError)
+			return
+		}
+		users = append(users, user)
+	}
+	if err = rows.Err(); err != nil {
+		http.Error(w, "Failed to retrieve users", http.StatusInternalServerError)
+		return
+	}
+	// Users.Mutex.RLock()
+	// defer Users.Mutex.RUnlock()
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(Users.Elements)
+	err = json.NewEncoder(w).Encode(users)
 	if err != nil {
 		http.Error(w, "Failed to encode user data in get users request", http.StatusInternalServerError)
 		return

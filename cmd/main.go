@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
+	_ "os"
 	"time"
 
 	"github.com/TitkovNikita/Http-Server-CRUD/pkg/databace"
@@ -37,10 +37,10 @@ func main() {
 			Host:     viper.GetString("host"),
 			Port:     viper.GetString("port"),
 			UserName: viper.GetString("user"),
-			//Password: viper.GetString("password"),
-			Password: os.Getenv("DB_PASSWORD"),
-			DBname:   viper.GetString("dbname"),
-			SslMode:  viper.GetString("sslmode"),
+			Password: viper.GetString("password"),
+			//Password: os.Getenv("DB_PASSWORD"),
+			DBname:  viper.GetString("dbname"),
+			SslMode: viper.GetString("sslmode"),
 		},
 	)
 
@@ -54,7 +54,7 @@ func main() {
 
 	r.Post(viper.GetString("CreateUserPostfix"), h.CreateUserHandler)
 	r.Get(viper.GetString("GetUsersDyIDPostfix"), h.GetUserByIDHandler)
-	r.Get(viper.GetString("GetAllusersPostfix"), handlers.GetAllusersHandler)
+	r.Get(viper.GetString("GetAllusersPostfix"), h.GetAllusersHandler)
 	r.Delete(viper.GetString("DeleteUserPostfix"), handlers.DeleteUserHandler)
 	r.Patch(viper.GetString("UpdateUserPostfix"), handlers.UpdateUserHandler)
 
