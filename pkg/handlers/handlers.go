@@ -175,18 +175,17 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	query := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, usersTable)
 
 	result, err := h.DB.Exec(query, id)
-    if err != nil {
-        logrus.Printf("Failed to delete user with ID %d: %v", id, err)
-        http.Error(w, "Failed to delete user", http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		logrus.Printf("Failed to delete user with ID %d: %v", id, err)
+		http.Error(w, "Failed to delete user", http.StatusInternalServerError)
+		return
+	}
 
-    rowsAffected, err := result.RowsAffected()
-    if err != nil || rowsAffected == 0 {
-        http.Error(w, "User not found", http.StatusNotFound)
-        return
-    }
-
+	rowsAffected, err := result.RowsAffected()
+	if err != nil || rowsAffected == 0 {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
 
 	w.WriteHeader(http.StatusNoContent)
 }
