@@ -24,9 +24,6 @@ type Handler struct {
 	DB *sqlx.DB
 }
 
-// Users contains a synchronized map of users.
-var Users = &entities.SyncMap{Elements: make(map[int64]*entities.User)}
-
 // CreateUserHandler is a handler function for creating a new user.// CreateUserHandler is a handler function for creating a new user.
 func (h *Handler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := &entities.User{}
@@ -74,15 +71,6 @@ func (h *Handler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Failed to encode user data in create request", http.StatusInternalServerError)
 		return
-	}
-
-	Users.Mutex.Lock()
-	defer Users.Mutex.Unlock()
-
-	Users.Elements[user.ID] = user
-
-	for id, u := range Users.Elements {
-		log.Printf("User ID: %d, Name: %s, Age: %d, Email: %s, Info: %+v\n", id, u.Name, u.Age, u.Email, u.Info)
 	}
 }
 
@@ -191,18 +179,11 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateUserHandler is a handler function for updating a user's details.
-func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
-		return
-	}
-	Users.Mutex.Lock()
-	defer Users.Mutex.Unlock()
-	user, ok := Users.Elements[id]
-	if !ok {
-		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
@@ -212,26 +193,62 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}
-
-	UpdateUser(user, updatedUser)
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// UpdateUser updates only the non-zero fields of an existing user with the values from updatedUser.
-func UpdateUser(existingUser *entities.User, updatedUser *entities.User) {
-	if updatedUser.Name != "" {
-		existingUser.Name = updatedUser.Name
+	if err := r.Body.Close(); err != nil {
+		log.Printf("Error closing request body: %v", err)
 	}
+
+	tx, err := h.DB.Beginx()
+	if err != nil {
+		http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
+		return
+	}
+	if err := tx.Rollback(); err != nil {
+		log.Printf("Error during rollback: %v", err)
+	}
+
+	var ageQuery interface{}
 	if updatedUser.Age != 0 {
-		existingUser.Age = updatedUser.Age
+		ageQuery = updatedUser.Age
+	} else {
+		ageQuery = nil
 	}
-	if updatedUser.Email != "" {
-		existingUser.Email = updatedUser.Email
+
+	userQuery := `
+		UPDATE users 
+		SET name = COALESCE(NULLIF($1, ''), name), 
+		    age = COALESCE($2, age), 
+		    email = COALESCE(NULLIF($3, ''), email)
+		WHERE id = $4`
+	result, err := tx.Exec(userQuery, updatedUser.Name, ageQuery, updatedUser.Email, id)
+	if err != nil {
+		logrus.Println("Error updating user:", err)
+		http.Error(w, "Failed to update user", http.StatusInternalServerError)
+		return
 	}
-	if updatedUser.Info.Street != "" {
-		existingUser.Info.Street = updatedUser.Info.Street
+
+	if affectedRows, _ := result.RowsAffected(); affectedRows == 0 {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
 	}
-	if updatedUser.Info.City != "" {
-		existingUser.Info.City = updatedUser.Info.City
+
+	if updatedUser.Info.City != "" || updatedUser.Info.Street != "" {
+		infoQuery := `
+			UPDATE users_info 
+			SET street = COALESCE(NULLIF($1, ''), street), 
+			    city = COALESCE(NULLIF($2, ''), city)
+			WHERE id = (SELECT info_id FROM users WHERE id = $3)`
+		_, err = tx.Exec(infoQuery, updatedUser.Info.Street, updatedUser.Info.City, id)
+		if err != nil {
+			logrus.Println("Error updating user info:", err)
+			http.Error(w, "Failed to update user info", http.StatusInternalServerError)
+			return
+		}
 	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

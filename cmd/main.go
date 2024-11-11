@@ -56,7 +56,7 @@ func main() {
 	r.Get(viper.GetString("GetUsersDyIDPostfix"), h.GetUserByIDHandler)
 	r.Get(viper.GetString("GetAllusersPostfix"), h.GetAllusersHandler)
 	r.Delete(viper.GetString("DeleteUserPostfix"), h.DeleteUserHandler)
-	r.Patch(viper.GetString("UpdateUserPostfix"), handlers.UpdateUserHandler)
+	r.Patch(viper.GetString("UpdateUserPostfix"), h.UpdateUserHandler)
 
 	server := &http.Server{
 		Addr:         viper.GetString("baseurl"),
