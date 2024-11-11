@@ -87,19 +87,32 @@ func (h *Handler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 // GetUserByIDHandler is a handler function for retrieving a user by their ID.
 func (h *Handler) GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
+	user := &entities.User{}
 	userID := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
 		return
 	}
-	Users.Mutex.RLock()
-	defer Users.Mutex.RUnlock()
-	user, ok := Users.Elements[id]
-	if !ok {
-		http.Error(w, "User not found", http.StatusNotFound)
+
+	query := fmt.Sprintf(`
+	SELECT u.id, u.name, u.age, u.email, i.street, i.city 
+	FROM %s u
+	JOIN %s i ON u.info_id = i.id
+	WHERE u.id = $1`, usersTable, usersInfoTablle)
+
+	row := h.DB.QueryRowx(query, id)
+	err = row.Scan(&user.ID, &user.Name, &user.Age, &user.Email, &user.Info.Street, &user.Info.City)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "User not found", http.StatusNotFound)
+		} else {
+			log.Printf("Database error: %v", err)
+			http.Error(w, "Failed to retrieve user", http.StatusInternalServerError)
+		}
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(user)
 	if err != nil {
