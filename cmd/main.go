@@ -55,7 +55,7 @@ func main() {
 	r.Post(viper.GetString("CreateUserPostfix"), h.CreateUserHandler)
 	r.Get(viper.GetString("GetUsersDyIDPostfix"), h.GetUserByIDHandler)
 	r.Get(viper.GetString("GetAllusersPostfix"), h.GetAllusersHandler)
-	r.Delete(viper.GetString("DeleteUserPostfix"), handlers.DeleteUserHandler)
+	r.Delete(viper.GetString("DeleteUserPostfix"), h.DeleteUserHandler)
 	r.Patch(viper.GetString("UpdateUserPostfix"), handlers.UpdateUserHandler)
 
 	server := &http.Server{

@@ -5,7 +5,6 @@
 - [About](#about)
 - [Getting Started](#getting_started)
 - [API Examples](#api_examples)
-- [Testing](#testing)
 
 ## About <a name = "about"></a>
 
@@ -96,12 +95,4 @@ curl -i -X PATCH "http://localhost:8080/users/1" \
                "city": "Updated City"
            }
          }'
-```
-
-## Testing <a name = "testing"></a>
-
-### Запуск тестов
-
-```bash
-go test -v ./...
 ```

@@ -11,6 +11,7 @@ import (
 	"github.com/TitkovNikita/Http-Server-CRUD/pkg/entities"
 	"github.com/go-chi/chi"
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -42,7 +43,7 @@ func (h *Handler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer func() {
 		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
-			log.Printf("Failed to rollback transaction: %v", err)
+			logrus.Printf("Failed to rollback transaction: %v", err)
 		}
 	}()
 
@@ -155,8 +156,6 @@ func (h *Handler) GetAllusersHandler(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, "Failed to retrieve users", http.StatusInternalServerError)
 		return
 	}
-	// Users.Mutex.RLock()
-	// defer Users.Mutex.RUnlock()
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(users)
 	if err != nil {
@@ -166,21 +165,29 @@ func (h *Handler) GetAllusersHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 // DeleteUserHandler is a handler function for deleting a user by their ID.
-func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
 		return
 	}
-	Users.Mutex.Lock()
-	defer Users.Mutex.Unlock()
-	_, ok := Users.Elements[id]
-	if !ok {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
-	delete(Users.Elements, id)
+	query := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, usersTable)
+
+	result, err := h.DB.Exec(query, id)
+    if err != nil {
+        logrus.Printf("Failed to delete user with ID %d: %v", id, err)
+        http.Error(w, "Failed to delete user", http.StatusInternalServerError)
+        return
+    }
+
+    rowsAffected, err := result.RowsAffected()
+    if err != nil || rowsAffected == 0 {
+        http.Error(w, "User not found", http.StatusNotFound)
+        return
+    }
+
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
