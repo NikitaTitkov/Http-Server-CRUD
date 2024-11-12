@@ -48,7 +48,7 @@ migrate -path ./schema -database 'postgres://!YOUR USER!:!YOUR PASSWORD!@localho
 ### Запуск сервера локально
 
 ```bash
-go run cmd/server/main.go
+go run cmd/server/main.go -config-path=local.env
 ```
 
 ### Сборка и запуск сервера

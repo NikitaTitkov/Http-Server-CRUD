@@ -1,9 +1,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
-	_ "os"
+	"os"
 	"time"
 
 	_ "github.com/TitkovNikita/Http-Server-CRUD/docs"
@@ -18,10 +19,10 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-func initConfig() error {
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
+var configPath string
+
+func init() {
+	flag.StringVar(&configPath, "config-path", "local.env", "path to config file")
 }
 
 // @title HTTP SERVER CRUD API
@@ -30,29 +31,30 @@ func initConfig() error {
 // @host localhost:8080
 // @BasePath /
 func main() {
+	flag.Parse()
+
 	logrus.SetFormatter(new(logrus.JSONFormatter))
-	err := initConfig()
-	if err != nil {
+
+	if err := initConfig(); err != nil {
 		logrus.Fatal("failed to get config: ", err)
 	}
 
-	if err := gotenv.Load(); err != nil {
-		logrus.Fatal("failed to load env variables: ", err)
+	if err := initEnv(); err != nil {
+		logrus.Fatal("failed to get env: ", err)
 	}
+
 	DB, err := databace.NewPostgresDB(
 		databace.Config{
-			Host:     viper.GetString("host"),
-			Port:     viper.GetString("port"),
-			UserName: viper.GetString("user"),
-			Password: viper.GetString("password"),
-			//Password: os.Getenv("DB_PASSWORD"),
-			DBname:  viper.GetString("dbname"),
-			SslMode: viper.GetString("sslmode"),
+			Host:     os.Getenv("HOST"),
+			Port:     os.Getenv("PORT"),
+			UserName: os.Getenv("USER_DB"),
+			Password: os.Getenv("DB_PASSWORD"),
+			DBname:   os.Getenv("DBNAME"),
+			SslMode:  os.Getenv("SSLMODE"),
 		},
 	)
 
 	h := handlers.Handler{DB: DB}
-
 	if err != nil {
 		logrus.Fatal("failded to initialice db: ", err)
 	}
@@ -79,4 +81,17 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+}
+
+func initConfig() error {
+	viper.AddConfigPath("configs")
+	viper.SetConfigName("config")
+	return viper.ReadInConfig()
+}
+
+func initEnv() error {
+	if err := gotenv.Load(configPath); err != nil {
+		return err
+	}
+	return nil
 }
