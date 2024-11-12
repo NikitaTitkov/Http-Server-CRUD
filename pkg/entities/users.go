@@ -10,7 +10,7 @@ type UserInfo struct {
 
 // User represents a user entity with associated information.
 type User struct {
-	ID    int64    
+	ID    int64
 	Name  string   `json:"name"`
 	Age   int      `json:"age"`
 	Email string   `json:"email"`

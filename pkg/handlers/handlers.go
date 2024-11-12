@@ -198,7 +198,6 @@ func (h *Handler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Error closing request body: %v", err)
 		}
 	}()
-	
 
 	tx, err := h.DB.Beginx()
 	if err != nil {
@@ -210,7 +209,6 @@ func (h *Handler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Error during rollback: %v", err)
 		}
 	}()
-	
 
 	var ageQuery interface{}
 	if updatedUser.Age != 0 {
