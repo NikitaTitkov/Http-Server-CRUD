@@ -24,7 +24,7 @@ type Handler struct {
 	DB *sqlx.DB
 }
 
-// CreateUserHandler is a handler function for creating a new user.// CreateUserHandler is a handler function for creating a new user.
+// CreateUserHandler is a handler function for creating a new user.
 func (h *Handler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := &entities.User{}
 	err := json.NewDecoder(r.Body).Decode(user)
@@ -193,18 +193,24 @@ func (h *Handler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}
-	if err := r.Body.Close(); err != nil {
-		log.Printf("Error closing request body: %v", err)
-	}
+	defer func() {
+		if err := r.Body.Close(); err != nil {
+			log.Printf("Error closing request body: %v", err)
+		}
+	}()
+	
 
 	tx, err := h.DB.Beginx()
 	if err != nil {
 		http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
 		return
 	}
-	if err := tx.Rollback(); err != nil {
-		log.Printf("Error during rollback: %v", err)
-	}
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			log.Printf("Error during rollback: %v", err)
+		}
+	}()
+	
 
 	var ageQuery interface{}
 	if updatedUser.Age != 0 {
@@ -221,7 +227,7 @@ func (h *Handler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		WHERE id = $4`
 	result, err := tx.Exec(userQuery, updatedUser.Name, ageQuery, updatedUser.Email, id)
 	if err != nil {
-		logrus.Println("Error updating user:", err)
+		logrus.Println("Error updating user:", err, userQuery)
 		http.Error(w, "Failed to update user", http.StatusInternalServerError)
 		return
 	}
