@@ -1,5 +1,5 @@
 baseurl: "localhost:8080"
-CreateUserPostfix: "/newuser"
+CreateUserPostfix: "/users/createuser"
 GetUsersDyIDPostfix: "/users/{id}"
 GetAllusersPostfix: "/users"
 DeleteUserPostfix: "/users/{id}"

@@ -6,6 +6,7 @@ import (
 	_ "os"
 	"time"
 
+	_ "github.com/TitkovNikita/Http-Server-CRUD/docs"
 	"github.com/TitkovNikita/Http-Server-CRUD/pkg/databace"
 	"github.com/TitkovNikita/Http-Server-CRUD/pkg/handlers"
 	"github.com/fatih/color"
@@ -14,6 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/subosito/gotenv"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func initConfig() error {
@@ -22,6 +24,11 @@ func initConfig() error {
 	return viper.ReadInConfig()
 }
 
+// @title HTTP SERVER CRUD API
+// @version 1.0
+// @description API Server for CRUD Application
+// @host localhost:8080
+// @BasePath /
 func main() {
 	logrus.SetFormatter(new(logrus.JSONFormatter))
 	err := initConfig()
@@ -57,6 +64,8 @@ func main() {
 	r.Get(viper.GetString("GetAllusersPostfix"), h.GetAllusersHandler)
 	r.Delete(viper.GetString("DeleteUserPostfix"), h.DeleteUserHandler)
 	r.Patch(viper.GetString("UpdateUserPostfix"), h.UpdateUserHandler)
+
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	server := &http.Server{
 		Addr:         viper.GetString("baseurl"),

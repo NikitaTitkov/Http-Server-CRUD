@@ -63,7 +63,7 @@ go build -o bin/server ./cmd/server/main.go
 ### Добавление нового пользователя
 
 ```bash
-curl -i -X POST -H "Content-Type: application/json" -d '{"name":"Alexy Laiho","age":41,"email":"alexycobhc@example.com","info":{"street":"123 Main St","city":"Anytown"}}' http://localhost:8080/newuser
+curl -i -X POST -H "Content-Type: application/json" -d '{"name":"Alexy Laiho","age":41,"email":"alexycobhc@example.com","info":{"street":"123 Main St","city":"Anytown"}}' http://localhost:8080/users/createuser
 ```
 
 ### Получение информации о пользователе

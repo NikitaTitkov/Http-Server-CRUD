@@ -24,7 +24,17 @@ type Handler struct {
 	DB *sqlx.DB
 }
 
-// CreateUserHandler is a handler function for creating a new user.
+// CreateUserHandler creates a new user.
+// @Summary Create a new user
+// @Tags users
+// @Description Creates a new user with provided details
+// @Accept  json
+// @Produce  json
+// @Param input body entities.User true "User info"
+// @Success 201 {object} entities.User "User created successfully"
+// @Failure 400 {object} map[string]string "Invalid request format"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /users/createuser [post]
 func (h *Handler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := &entities.User{}
 	err := json.NewDecoder(r.Body).Decode(user)
@@ -74,7 +84,18 @@ func (h *Handler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetUserByIDHandler is a handler function for retrieving a user by their ID.
+// GetUserByIDHandler retrieves a user by their ID.
+// @Summary Get User by ID
+// @Tags users
+// @Description Retrieves a user's details by their ID
+// @Accept  json
+// @Produce  json
+// @Param id path int true "User ID"
+// @Success 200 {object} entities.User
+// @Failure 400 {object} map[string]string "Invalid user ID format"
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Failed to retrieve user"
+// @Router /users/{id} [get]
 func (h *Handler) GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	user := &entities.User{}
 	userID := chi.URLParam(r, "id")
@@ -111,6 +132,14 @@ func (h *Handler) GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllusersHandler is a handler function for retrieving all users.
+// @Summary Get all users
+// @Tags users
+// @Description Retrieves a list of all users
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} entities.User "List of users"
+// @Failure 500 {object} map[string]string "Failed to retrieve users"
+// @Router /users [get]
 func (h *Handler) GetAllusersHandler(w http.ResponseWriter, _ *http.Request) {
 
 	var users []entities.User
@@ -153,6 +182,15 @@ func (h *Handler) GetAllusersHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 // DeleteUserHandler is a handler function for deleting a user by their ID.
+// @Summary Delete a user by ID
+// @Tags users
+// @Description Deletes a user specified by their ID
+// @Param id path int true "User ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} map[string]string "Invalid user ID format"
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Failed to delete user"
+// @Router /users/{id} [delete]
 func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(userID, 10, 64)
@@ -179,6 +217,16 @@ func (h *Handler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateUserHandler is a handler function for updating a user's details.
+// @Summary Update user by ID
+// @Tags users
+// @Description Updates a user's details (name, age, email, address) based on provided fields
+// @Param id path int true "User ID"
+// @Param input body entities.User true "User data to update"
+// @Success 204 "No Content"
+// @Failure 400 {object} map[string]string "Invalid user ID format or request body"
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Failed to update user or user info"
+// @Router /users/{id} [patch]
 func (h *Handler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(userID, 10, 64)

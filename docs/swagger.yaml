@@ -1,0 +1,197 @@
+basePath: /
+definitions:
+  entities.User:
+    properties:
+      age:
+        type: integer
+      email:
+        type: string
+      id:
+        type: integer
+      info:
+        $ref: '#/definitions/entities.UserInfo'
+      name:
+        type: string
+    type: object
+  entities.UserInfo:
+    properties:
+      city:
+        type: string
+      street:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API Server for CRUD Application
+  title: HTTP SERVER CRUD API
+  version: "1.0"
+paths:
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            items:
+              $ref: '#/definitions/entities.User'
+            type: array
+        "500":
+          description: Failed to retrieve users
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all users
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      description: Deletes a user specified by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid user ID format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to delete user
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a user by ID
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a user's details by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.User'
+        "400":
+          description: Invalid user ID format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to retrieve user
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get User by ID
+      tags:
+      - users
+    patch:
+      description: Updates a user's details (name, age, email, address) based on provided
+        fields
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User data to update
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/entities.User'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid user ID format or request body
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to update user or user info
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update user by ID
+      tags:
+      - users
+  /users/createuser:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user with provided details
+      parameters:
+      - description: User info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/entities.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            $ref: '#/definitions/entities.User'
+        "400":
+          description: Invalid request format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new user
+      tags:
+      - users
+swagger: "2.0"
