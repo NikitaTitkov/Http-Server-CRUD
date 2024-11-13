@@ -70,7 +70,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entities.User"
+                            "$ref": "#/definitions/entities.UserCreateRequest"
                         }
                     }
                 ],
@@ -279,6 +279,23 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "info": {
+                    "$ref": "#/definitions/entities.UserInfo"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.UserCreateRequest": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
                 },
                 "info": {
                     "$ref": "#/definitions/entities.UserInfo"

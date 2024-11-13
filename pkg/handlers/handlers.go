@@ -30,7 +30,7 @@ type Handler struct {
 // @Description Creates a new user with provided details
 // @Accept  json
 // @Produce  json
-// @Param input body entities.User true "User info"
+// @Param input body entities.UserCreateRequest true "User info"
 // @Success 201 {object} entities.User "User created successfully"
 // @Failure 400 {object} map[string]string "Invalid request format"
 // @Failure 500 {object} map[string]string "Internal server error"

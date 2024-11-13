@@ -1,7 +1,5 @@
 package entities
 
-import "sync"
-
 // UserInfo holds information about the user.
 type UserInfo struct {
 	Street string `json:"street"`
@@ -17,8 +15,10 @@ type User struct {
 	Info  UserInfo `json:"info"`
 }
 
-// SyncMap is a thread-safe map to store users.
-type SyncMap struct {
-	Elements map[int64]*User
-	Mutex    sync.RWMutex
+// UserCreateRequest represents the data for creating a user. Used for swagger docs.
+type UserCreateRequest struct {
+    Name  string   `json:"name"`
+    Age   int      `json:"age"`
+    Email string   `json:"email"`
+    Info  UserInfo `json:"info"`
 }

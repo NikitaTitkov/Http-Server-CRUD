@@ -13,6 +13,17 @@ definitions:
       name:
         type: string
     type: object
+  entities.UserCreateRequest:
+    properties:
+      age:
+        type: integer
+      email:
+        type: string
+      info:
+        $ref: '#/definitions/entities.UserInfo'
+      name:
+        type: string
+    type: object
   entities.UserInfo:
     properties:
       city:
@@ -171,7 +182,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/entities.User'
+          $ref: '#/definitions/entities.UserCreateRequest'
       produces:
       - application/json
       responses:

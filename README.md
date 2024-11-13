@@ -47,6 +47,8 @@ migrate -path ./schema -database 'postgres://!YOUR USER!:!YOUR PASSWORD!@localho
 
 ### Запуск сервера локально
 
+Параметр -config-path - путь конфиг файла .env формата. По умолчанию `config-path=local.env`
+
 ```bash
 go run cmd/server/main.go -config-path=local.env
 ```
@@ -96,3 +98,5 @@ curl -i -X PATCH "http://localhost:8080/users/1" \
            }
          }'
 ```
+## Swagger документация
+Для просмотра документации запустите сервер и откройте в брузере страницу `http://localhost:8080/swagger/`
